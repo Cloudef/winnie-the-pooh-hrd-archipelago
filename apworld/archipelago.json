@@ -1,0 +1,8 @@
+{
+  "game": "Winnie the Pooh's Home Run Derby",
+  "world_version": "0.1.0",
+  "authors": ["Vetoniemi Jari Juhani"],
+  "version": 7,
+  "compatible_version": 7,
+  "minimum_ap_version": "0.6.5"
+}
