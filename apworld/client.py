@@ -22,8 +22,7 @@ location_id_to_name = {v: k for k, v in location_name_to_id.items()}
 
 def get_game_path() -> str:
     """Ask the user for the game path if not already stored."""
-    from Utils import persistent_load, persistent_store
-    stored = persistent_load().get(CLIENT_ID, {}).get("game_path")
+    stored = Utils.persistent_load().get(CLIENT_ID, {}).get("game_path")
     if stored and os.path.exists(stored):
         return stored
 
@@ -32,7 +31,10 @@ def get_game_path() -> str:
         (("Shockwave Flash files", (".swf",)),)
     )
 
-    persistent_store(CLIENT_ID, "game_path", path)
+    if not path or not os.path.exists(path):
+        raise FileNotFoundError("No game swf selected.")
+
+    Utils.persistent_store(CLIENT_ID, "game_path", path)
     return path
 
 def read_file(*path) -> bytes:
@@ -53,6 +55,7 @@ def apply_patch(tmpdir: str) -> str:
         swf = f.read()
 
     if hashlib.sha256(swf).hexdigest() != GAME_HASH:
+        Utils.persistent_store(CLIENT_ID, "game_path", None)
         raise ValueError("SHA256 mismatch — wrong version of the game?")
 
     patch = read_file("data", "patch.bsdiff4")
@@ -66,8 +69,7 @@ def apply_patch(tmpdir: str) -> str:
     return out_path
 
 def get_ruffle_path() -> str:
-    from Utils import persistent_load, persistent_store
-    stored = persistent_load().get(CLIENT_ID, {}).get("ruffle_path")
+    stored = Utils.persistent_load().get(CLIENT_ID, {}).get("ruffle_path")
     if stored and os.path.exists(stored):
         return stored
 
@@ -76,19 +78,29 @@ def get_ruffle_path() -> str:
         (("Executable files", (".exe",)),)
     )
 
-    persistent_store(CLIENT_ID, "ruffle_path", path)
+    if not path or not os.path.exists(path):
+        raise FileNotFoundError("No Ruffle executable selected.")
+
+    Utils.persistent_store(CLIENT_ID, "ruffle_path", path)
     return path
 
 def launch_ruffle(swf_path: str, port: int) -> subprocess.Popen:
     """Launch Ruffle with the patched game."""
     if sys.platform == "win32":
-        kwargs = {}
-        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
         ruffle = get_ruffle_path()
-        proc = subprocess.Popen([ruffle, "--socket-allow", f"localhost:{port}", f"-Pport={port}", swf_path], **kwargs)
+        try:
+            proc = subprocess.Popen(
+                [ruffle, "--storage", "memory", "--socket-allow", f"localhost:{port}", f"-Pport={port}", swf_path],
+                creationflags=subprocess.CREATE_NO_WINDOW,
+            )
+        except Exception as e:
+            Utils.persistent_store(CLIENT_ID, "ruffle_path", None)
+            raise RuntimeError(f"Failed to launch Ruffle: {e}") from e
     else:
         ruffle = os.environ.get("RUFFLE_PATH", "ruffle")
-        proc = subprocess.Popen([ruffle, "--socket-allow", f"localhost:{port}", f"-Pport={port}", swf_path])
+        proc = subprocess.Popen(
+            [ruffle, "--storage", "memory", "--socket-allow", f"localhost:{port}", f"-Pport={port}", swf_path],
+        )
     logger.info(f"Launched Ruffle (pid {proc.pid})")
     return proc
 
