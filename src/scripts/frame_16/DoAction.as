@@ -393,8 +393,10 @@ function apHandlePacket(msg: Object) {
          }
       }
    } else if (msg.type == "message") {
+	  trace("msg: " + msg.text);
       apShowMessage(msg.text);
    } else if (msg.type == "deathlink") {
+	  trace("deathlink: " + msg.cause);
       apShowMessage(msg.cause);
       isDeathLink = true;
       gameLeft = 0;
