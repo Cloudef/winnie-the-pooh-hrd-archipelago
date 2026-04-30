@@ -135,7 +135,7 @@ class WPHRDWorld(World):
                 stage_locations[0], self.player
             ).access_rule = lambda state: True
 
-            for i in range(1, len(STAGE_NAMES) - 1):
+            for i in range(1, len(STAGE_NAMES)):
                 self.multiworld.get_location(
                     stage_locations[i], self.player
                 ).access_rule = lambda state, prev=stage_locations[i - 1]: \
