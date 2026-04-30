@@ -28,8 +28,8 @@ def get_game_path() -> str:
         return stored
 
     path = Utils.open_filename(
-        title="Select the Game SWF",
-        filetypes=(("Shockwave Flash files", "*.swf"), ("All files", "*.*"))
+        "Select the Game swf file",
+        (("Shockwave Flash files", (".swf",)),)
     )
 
     persistent_store(CLIENT_ID, "game_path", path)
@@ -72,8 +72,8 @@ def get_ruffle_path() -> str:
         return stored
 
     path = Utils.open_filename(
-        title="Select the Ruffle executable",
-        filetypes=(("Executable", "*.exe"), ("All files", "*.*"))
+        "Select the Ruffle executable",
+        (("Executable files", (".exe",)),)
     )
 
     persistent_store(CLIENT_ID, "ruffle_path", path)
